@@ -1,0 +1,45 @@
+
+.logoContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: em;
+  }
+  
+  .logo {
+    position: relative;
+    width: 200px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    background: transparent;
+  }
+  
+  .letter {
+    position: absolute;
+    font-size: 90px;
+    font-weight: 1000;
+    width: 100px;
+    height: 100px;
+    line-height: 100px;
+    text-align: center;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .letterD {
+    composes: letter;
+    left: 14;
+    background: black;
+    border-radius: 50px 0 0 50px;
+    rotate: 180deg;
+  }
+  
+  .letterT {
+    composes: letter;
+    right: 0;
+    background: black;
+    border-radius: 50%;
+  }
