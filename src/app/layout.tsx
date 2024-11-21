@@ -13,11 +13,11 @@ export default function RootLayout({
 }>) {
 
   const footerStyle: React.CSSProperties = {
-    marginTop: '-40px',
+    marginTop: '10px',
     textAlign: 'center',
     fontSize: '14px',
     color: '#666',
-    padding: '10px 0',
+    padding: '5px',
     borderTop: '1px solid #ddd',
 };
 

@@ -6,8 +6,7 @@
 .configGrid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    padding: 2rem;
+    gap: 0.5rem;
     max-width: auto;
 
 }
@@ -22,7 +21,7 @@
 
 @media (min-width: 768px) {
     .timerDisplay {
-        padding: 2rem;
+        padding: 1rem;
     }
 
     .configGrid {

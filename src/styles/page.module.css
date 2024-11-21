@@ -5,6 +5,7 @@
   font-family: Arial, sans-serif;
   min-height: 100vh;
   background-color: #f0f0f0;
+  margin-bottom: -40px;
 }
 
 .logoContainer {
@@ -17,7 +18,8 @@
   width: 100%;
   max-width: 1200px;
   gap: 20px;
-  padding: 20px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .exercisesContainer {
