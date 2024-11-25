@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import styles from "@/styles/CircularTimer.module.css";
 import { DataInterface } from "@/interfaces/data.interface";
 
@@ -6,11 +6,18 @@ interface CircularTimerProps {
   data: DataInterface;
 }
 
+type Phase = {
+  duration: number;
+  label: string;
+  type: "exercise" | "exerciseRest" | "sessionRest";
+};
+
 export default function CircularTimer({ data }: CircularTimerProps) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [stageLabel, setStageLabel] = useState("");
+  const [currentPhase, setCurrentPhase] = useState<Phase>();
   const [currentSession, setCurrentSession] = useState(1);
+  const [currentExercise, setCurrentExercise] = useState(0);
   const [isCycleComplete, setIsCycleComplete] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -18,11 +25,10 @@ export default function CircularTimer({ data }: CircularTimerProps) {
   const intervalRef = useRef<number | null>(null);
   const isPausedRef = useRef(isPaused);
   const timeLeftRef = useRef(timeLeft);
-  const currentPhaseRef = useRef<{ duration: number; label: string } | null>(
-    null
-  );
+  const currentPhaseRef = useRef<Phase | undefined>();
+  const cyclePromiseRef = useRef<Promise<void> | null>(null);
+  const cycleResolveRef = useRef<(() => void) | null>(null);
 
-  // Utils
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -31,21 +37,20 @@ export default function CircularTimer({ data }: CircularTimerProps) {
 
   const getColor = () => {
     if (timeLeft <= 5) return styles.red;
-    if (stageLabel.includes("Descanso entre sesiones")) {
-      return styles.blue;
-    }
-    switch (stageLabel.split(":")[0]) {
-      case "Ejercicio":
+    if (!currentPhase) return styles.defaultColor;
+    switch (currentPhase.type) {
+      case "exercise":
         return styles.green;
-      case "Descanso entre ejercicios":
-        return styles.orange;
+      case "exerciseRest":
+        return styles.blue;
+      case "sessionRest":
+        return styles.blue;
       default:
         return styles.defaultColor;
     }
   };
 
-  // Funciones de control del temporizador
-  const startInterval = () => {
+  const startInterval = useCallback(() => {
     if (intervalRef.current) return;
 
     intervalRef.current = window.setInterval(() => {
@@ -68,31 +73,34 @@ export default function CircularTimer({ data }: CircularTimerProps) {
         return newTimeLeft;
       });
     }, 1000);
-  };
+  }, []);
 
-  const runPhase = (duration: number, label: string) => {
-    return new Promise<void>((resolve) => {
-      setStageLabel(label);
-      setTimeLeft(duration);
-      timeLeftRef.current = duration;
-      currentPhaseRef.current = { duration, label };
-      setProgress(0);
-      startInterval();
+  const runPhase = useCallback(
+    (phase: Phase) => {
+      return new Promise<void>((resolve) => {
+        setCurrentPhase(phase);
+        currentPhaseRef.current = phase;
+        setTimeLeft(phase.duration);
+        timeLeftRef.current = phase.duration;
+        setProgress(0);
+        startInterval();
 
-      const checkCompletion = setInterval(() => {
-        if (timeLeftRef.current <= 0) {
-          clearInterval(checkCompletion);
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
+        const checkCompletion = setInterval(() => {
+          if (timeLeftRef.current <= 0) {
+            clearInterval(checkCompletion);
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            resolve();
           }
-          resolve();
-        }
-      }, 100);
-    });
-  };
+        }, 100);
+      });
+    },
+    [startInterval]
+  );
 
-  const startCycle = async () => {
+  const startCycle = useCallback(async () => {
     for (let session = 1; session <= data.sessions; session++) {
       setCurrentSession(session);
 
@@ -101,91 +109,110 @@ export default function CircularTimer({ data }: CircularTimerProps) {
         exerciseIndex < data.typeOfExercises.length;
         exerciseIndex++
       ) {
+        setCurrentExercise(exerciseIndex);
+
         if (isPausedRef.current) {
           await new Promise<void>((resolve) => {
-            const checkPaused = setInterval(() => {
-              if (!isPausedRef.current) {
-                clearInterval(checkPaused);
-                resolve();
-              }
-            }, 100);
+            cycleResolveRef.current = resolve;
           });
         }
 
-        await runPhase(
-          data.exerciseTime,
-          `Ejercicio: ${data.typeOfExercises[exerciseIndex]} (${
+        await runPhase({
+          duration: data.exerciseTime,
+          label: `Ejercicio: ${data.typeOfExercises[exerciseIndex]} (${
             exerciseIndex + 1
-          }/${data.typeOfExercises.length})`
-        );
-        await runPhase(data.exerciseRest, "Descanso entre ejercicios");
+          }/${data.typeOfExercises.length})`,
+          type: "exercise",
+        });
+
+        if (
+          exerciseIndex < data.typeOfExercises.length - 1 ||
+          session < data.sessions
+        ) {
+          await runPhase({
+            duration: data.exerciseRest,
+            label: "Descanso entre ejercicios",
+            type: "exerciseRest",
+          });
+        }
       }
 
       if (session < data.sessions) {
-        await runPhase(
-          data.restSessions * 60,
-          `Descanso entre sesiones (Sesión ${session + 1})`
-        );
+        await runPhase({
+          duration: data.restSessions * 60,
+          label: `Descanso entre sesiones (Sesión ${session + 1})`,
+          type: "sessionRest",
+        });
       }
     }
     setIsCycleComplete(true);
     setIsRunning(false);
     onComplete();
-  };
+  }, [data, runPhase]);
 
-  //Funciones de los Botones de inicio, pausa/reanudar y reinicio.
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     setIsRunning(true);
     setIsPaused(false);
     isPausedRef.current = false;
-    startCycle();
-  };
+    cyclePromiseRef.current = startCycle();
+  }, [startCycle]);
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     setIsPaused((prevIsPaused) => {
-      if (prevIsPaused) {
-        startInterval();
-      } else {
+      const newIsPaused = !prevIsPaused;
+      isPausedRef.current = newIsPaused;
+      if (newIsPaused) {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
+      } else {
+        startInterval();
+        if (cycleResolveRef.current) {
+          cycleResolveRef.current();
+          cycleResolveRef.current = null;
+        }
       }
-      return !prevIsPaused;
+      return newIsPaused;
     });
-  };
+  }, [startInterval]);
 
-  const handleReset = () => {
-    setTimeLeft(0);
-    setProgress(0);
-    setStageLabel("");
-    setCurrentSession(1);
-    setIsCycleComplete(false);
+  const handleReset = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    currentPhaseRef.current = null;
-  };
-
-  const handleResetButton = () => {
-    handleReset();
+    if (cyclePromiseRef.current) {
+      cyclePromiseRef.current.then(() => {
+        cyclePromiseRef.current = null;
+      });
+    }
+    if (cycleResolveRef.current) {
+      cycleResolveRef.current();
+      cycleResolveRef.current = null;
+    }
+    setTimeLeft(0);
+    setProgress(0);
+    setCurrentSession(1);
+    setCurrentExercise(0);
+    setIsCycleComplete(false);
+    setCurrentPhase(undefined);
+    currentPhaseRef.current = undefined;
     setIsRunning(false);
     setIsPaused(false);
     isPausedRef.current = false;
-  };
+    timeLeftRef.current = 0;
+  }, []);
 
-  // Función de finalización
   const onComplete = () => {
     setIsRunning(false);
     alert("¡Entrenamiento completado!");
   };
 
-  // Efect
   useEffect(() => {
     isPausedRef.current = isPaused;
     timeLeftRef.current = timeLeft;
-  }, [isPaused, isRunning, timeLeft]);
+  }, [isPaused, timeLeft]);
 
   return (
     <div className={styles.timerContainer}>
@@ -195,6 +222,7 @@ export default function CircularTimer({ data }: CircularTimerProps) {
             <svg className={styles.svg} viewBox="0 0 100 100">
               <circle className={styles.progressTrack} cx="50" cy="50" r="45" />
               <circle
+                data-testid="progress-circle"
                 className={`${styles.progressFill} ${getColor()}`}
                 cx="50"
                 cy="50"
@@ -209,7 +237,7 @@ export default function CircularTimer({ data }: CircularTimerProps) {
             </svg>
             <div className={styles.display}>
               <div className={styles.time}>{formatTime(timeLeft)}</div>
-              <div className={styles.label}>{stageLabel}</div>
+              <div className={styles.label}>{currentPhase?.label}</div>
             </div>
           </>
         ) : (
@@ -226,6 +254,9 @@ export default function CircularTimer({ data }: CircularTimerProps) {
       <div className={styles.info}>
         <p>
           Sesión: {currentSession} / {data.sessions}
+        </p>
+        <p>
+          Ejercicio: {currentExercise + 1} / {data.typeOfExercises.length}
         </p>
       </div>
       {isCycleComplete && (
@@ -246,7 +277,7 @@ export default function CircularTimer({ data }: CircularTimerProps) {
         >
           {isPaused ? "Reanudar" : "Pausar"}
         </button>
-        <button className={styles.button} onClick={handleResetButton}>
+        <button className={styles.button} onClick={handleReset}>
           Reiniciar
         </button>
       </div>
