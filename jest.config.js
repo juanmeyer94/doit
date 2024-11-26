@@ -7,9 +7,9 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testEnvironment: 'jest-environment-jsdom',
-  collectCoverageFrom: [ // Acá elegis donde queres que tome los test, en este caso components
-    'src/components/**/*.{js,jsx,ts,tsx}', // Solo incluir archivos dentro de la carpeta `components`
-    '!src/components/**/*.d.ts', // Excluir archivos de definición de TypeScript+
+  collectCoverageFrom: [ 
+    'src/components/**/*.{js,jsx,ts,tsx}', 
+    '!src/components/**/*.d.ts', 
     '!src/components/logo.tsx'
   ],
   collectCoverage:true,

@@ -1,46 +1,58 @@
-import type { Metadata } from "next";
-import "@/app/global.css"
+import { Inter } from "next/font/google";
+import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "DO IT - Tu mejor temporizador",
-  description: "Temprizador de ejercicios basados en ciclos.",
+import "@/app/global.css";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
+  title: "DO-IT - Timer para Entrenamientos Funcionales",
+  description:
+    "Timer personalizable para entrenamientos funcionales, CrossFit y rutinas basadas en ciclos.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-
-  const footerStyle: React.CSSProperties = {
-    marginTop: '10px',
-    textAlign: 'center',
-    fontSize: '14px',
-    color: '#666',
-    padding: '5px',
-    borderTop: '1px solid #ddd',
-};
-
-const linkStyle: React.CSSProperties = {
-    color: '#2196F3',
-    textDecoration: 'none',
-    fontWeight: 'bold',
-};
-
+}) {
   return (
     <html lang="es">
-      <body >
+      <body className={inter.className}>
+        <header>
+          <div className="container">
+            <Link href="/">
+              <span>DO-IT</span>
+            </Link>
+            <nav>
+              <div>
+                <Link href="/timer">
+                  <button>Timer</button>
+                </Link>
+              </div>
+              <div>
+                <Link
+                  href="https://github.com/juanmeyer94/doit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <button>GitHub</button>
+                </Link>
+              </div>
+            </nav>
+          </div>
+        </header>
+
         {children}
-         <footer style={footerStyle}>
-            <span>Desarrollado por </span>
-            <a 
-                href="https://www.linkedin.com/in/juan-meyer-9b34a5269/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={linkStyle}
-            >
-                Juan Meyer
-            </a>
+        <footer>
+          <span>Desarrollado por </span>
+          <a
+            href="https://www.linkedin.com/in/juan-meyer-9b34a5269/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Juan Meyer{" "}
+          </a>
         </footer>
       </body>
     </html>

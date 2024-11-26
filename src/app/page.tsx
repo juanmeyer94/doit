@@ -1,73 +1,58 @@
-"use client";
+import Link from 'next/link'
+import styles from '@/styles/landing.module.css'
 
-import { useState } from "react";
-import Logo from "@/components/logo";
-import TimerDisplay from "@/components/timer/timer-display";
-import { DataInterface } from "../interfaces/data.interface";
-import CircularTimer from "@/components/timer/circularTimer";
-import styles from "@/styles/page.module.css";
-import ExercisesDND from "@/components/Excercises/DND/ExercisesDND";
-
-export default function Home() {
-  const [data, setData] = useState<DataInterface>({
-    sessions: 3,
-    exerciseTime: 45,
-    exerciseRest: 15,
-    currentSession: 1,
-    restSessions: 1,
-    restTime: 15,
-    typeOfExercises: [
-     
-    ],
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setData((prevData) => ({
-      ...prevData,
-      [name]: parseInt(value) || 0,
-    }));
-  };
-
-  const handleIncrement = (field: keyof DataInterface) => {
-    setData((prevData) => ({
-      ...prevData,
-      [field]: (prevData[field] as number) + 1,
-    }));
-  };
-
-  const handleDecrement = (field: keyof DataInterface) => {
-    setData((prevData) => ({
-      ...prevData,
-      [field]: Math.max(0, (prevData[field] as number) - 1),
-    }));
-  };
-
+export default function LandingPage() {
   return (
     <div className={styles.container}>
-      <div className={styles.logoContainer}>
-        <Logo />
-      </div>
-      <div>
+      <section className={styles.hero}>
+        <h1 className={styles.title}>DO-IT Timer</h1>
+        <p className={styles.subtitle}>
+          Optimiza tus entrenamientos funcionales con nuestro temporizador personalizable.
+          Perfecto para ejercicios Funcional, CrossFit y rutinas basadas en ciclos.
+        </p>
+        <Link href="/timer" className={styles.ctaButton}>
+          Comenzar Entrenamiento
+        </Link>
+      </section>
 
-      <TimerDisplay
-        handleDecrement={handleDecrement}
-        handleIncrement={handleIncrement}
-        handleInputChange={handleInputChange}
-        data={data}
-        />
+      <section className={styles.features}>
+        <div className={styles.featuresGrid}>
+          <div className={styles.featureCard}>
+            <h2 className={styles.featureTitle}>Temporizador Personalizable</h2>
+            <p className={styles.featureDescription}>
+              Configura tiempos de ejercicio y descanso según tus necesidades específicas.
+              Adapta el timer a cualquier tipo de entrenamiento.
+            </p>
+          </div>
+
+          <div className={styles.featureCard}>
+            <h2 className={styles.featureTitle}>Gestión de Ejercicios</h2>
+            <p className={styles.featureDescription}>
+              Organiza y personaliza tu rutina de ejercicios fácilmente.
+              Añade, elimina y reordena ejercicios según tu plan de entrenamiento.
+            </p>
+          </div>
+
+          <div className={styles.featureCard}>
+            <h2 className={styles.featureTitle}>Diseño Responsive</h2>
+            <p className={styles.featureDescription}>
+              Accede desde cualquier dispositivo. Diseñado para funcionar perfectamente
+              en tu teléfono, tablet o computadora.
+            </p>
+          </div>
         </div>
-      <div className={styles.content}>
-        <div className={styles.circularTimerContainer}>
-          <CircularTimer data={data} />
-        </div>
-        <div className={styles.exercisesContainer}>
-          <ExercisesDND
-            typeOfExercises={data.typeOfExercises}
-            setData={setData}
-          />
-        </div>
-      </div>
+      </section>
+
+      <section className={styles.cta}>
+        <h2 className={styles.ctaTitle}>¿Listo para entrenar?</h2>
+        <p className={styles.ctaText}>
+          Únete a los atletas que ya están mejorando sus entrenamientos con DO-IT Timer
+        </p>
+        <Link href="/timer" className={styles.ctaButton}>
+          Comenzar Ahora
+        </Link>
+      </section>
     </div>
-  );
+  )
 }
+
