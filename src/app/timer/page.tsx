@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Logo from "@/components/logo";
 import TimerDisplay from "@/components/timer/timer-display";
-import { DataInterface } from "../interfaces/data.interface";
+import { DataInterface } from "@/interfaces/data.interface";
 import CircularTimer from "@/components/timer/circularTimer";
 import styles from "@/styles/page.module.css";
 import ExercisesDND from "@/components/Excercises/DND/ExercisesDND";
