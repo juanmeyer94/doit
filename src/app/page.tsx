@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import styles from '@/styles/landing.module.css'
+import styles from '@/styles/Landing.module.css'
 
 export default function LandingPage() {
   return (
