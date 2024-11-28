@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import styles from "@/styles/CircularTimer.module.css";
 import { DataInterface } from "@/interfaces/data.interface";
+import Swal from "sweetalert2";
 
 interface CircularTimerProps {
   data: DataInterface;
@@ -183,9 +184,16 @@ export default function CircularTimer({ data }: CircularTimerProps) {
 
   const onComplete = () => {
     setIsRunning(false);
-    alert("¡Entrenamiento completado!");
+  
+    Swal.fire({
+      title: "¡Entrenamiento completado!",
+      html: `<strong>¡Felicitaciones!</strong> Has terminado todas las sesiones.`,
+      icon: "success",
+      confirmButtonText: "Aceptar",
+      backdrop: true,
+    });
   };
-
+  
   useEffect(() => {
     isPausedRef.current = isPaused;
     timeLeftRef.current = timeLeft;
