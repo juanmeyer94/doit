@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, screen} from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import ExercisesDND from '../Excercises/DND/ExercisesDND';
 
-// Mock the DnD components
 jest.mock('@dnd-kit/core', () => ({
   ...jest.requireActual('@dnd-kit/core'),
   DndContext: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -30,6 +29,7 @@ describe('ExercisesDND', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.clear();
   });
 
   it('renders the component with initial exercises', () => {
@@ -54,6 +54,7 @@ describe('ExercisesDND', () => {
     const setDataCallback = mockSetData.mock.calls[0][0];
     const result = setDataCallback({ typeOfExercises: initialExercises });
     expect(result.typeOfExercises).toEqual([...initialExercises, 'Burpees']);
+    expect(localStorage.getItem('exercises')).toBe(JSON.stringify([...initialExercises, 'Burpees']));
   });
 
   it('does not add an empty exercise', async () => {
@@ -63,6 +64,7 @@ describe('ExercisesDND', () => {
     await userEvent.click(addButton);
 
     expect(mockSetData).not.toHaveBeenCalled();
+    expect(localStorage.getItem('exercises')).toBeNull();
   });
 
   it('deletes an exercise when delete button is clicked', async () => {
@@ -74,6 +76,29 @@ describe('ExercisesDND', () => {
     const setDataCallback = mockSetData.mock.calls[0][0];
     const result = setDataCallback({ typeOfExercises: initialExercises });
     expect(result.typeOfExercises).toEqual(['Squats', 'Lunges']);
+    expect(localStorage.getItem('exercises')).toBe(JSON.stringify(['Squats', 'Lunges']));
+  });
+
+  it('loads exercises from localStorage on mount', () => {
+    const cachedExercises = ['Jumping Jacks', 'Mountain Climbers'];
+    localStorage.setItem('exercises', JSON.stringify(cachedExercises));
+    
+    setup([]);
+    
+    cachedExercises.forEach(exercise => {
+      expect(screen.getByText(exercise)).toBeInTheDocument();
+    });
+
+    expect(mockSetData).toHaveBeenCalled();
+    const setDataCall = mockSetData.mock.calls[0][0];
+    expect(typeof setDataCall).toBe('function');
+
+    const mockPrevData = { typeOfExercises: [] };
+    const result = setDataCall(mockPrevData);
+
+    expect(result).toEqual(expect.objectContaining({
+      typeOfExercises: cachedExercises
+    }));
   });
 });
 

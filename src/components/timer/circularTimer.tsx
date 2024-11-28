@@ -140,7 +140,7 @@ export default function CircularTimer({ data }: CircularTimerProps) {
       if (session < data.sessions) {
         await runPhase({
           duration: data.restSessions * 60,
-          label: `Descanso entre sesiones (Sesión ${session + 1})`,
+          label: `Descanso entre sesiones (Iniciando sesión: ${session + 1})`,
           type: "sessionRest",
         });
       }
@@ -178,30 +178,7 @@ export default function CircularTimer({ data }: CircularTimerProps) {
   }, [startInterval]);
 
   const handleReset = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    if (cyclePromiseRef.current) {
-      cyclePromiseRef.current.then(() => {
-        cyclePromiseRef.current = null;
-      });
-    }
-    if (cycleResolveRef.current) {
-      cycleResolveRef.current();
-      cycleResolveRef.current = null;
-    }
-    setTimeLeft(0);
-    setProgress(0);
-    setCurrentSession(1);
-    setCurrentExercise(0);
-    setIsCycleComplete(false);
-    setCurrentPhase(undefined);
-    currentPhaseRef.current = undefined;
-    setIsRunning(false);
-    setIsPaused(false);
-    isPausedRef.current = false;
-    timeLeftRef.current = 0;
+    window.location.reload();
   }, []);
 
   const onComplete = () => {
