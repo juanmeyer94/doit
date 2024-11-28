@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     DndContext,
     closestCenter,
@@ -26,6 +26,7 @@ interface ExercisesDNDProps {
 
 const ExercisesDND: React.FC<ExercisesDNDProps> = ({ typeOfExercises, setData }) => {
     const [newExercise, setNewExercise] = useState<string>("");
+    const [exercises, setExercises] = useState<string[]>(typeOfExercises);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -37,40 +38,58 @@ const ExercisesDND: React.FC<ExercisesDNDProps> = ({ typeOfExercises, setData })
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
-    
+
+    useEffect(() => {
+        const cachedExercises = localStorage.getItem('exercises');
+        if (cachedExercises) {
+            const parsedExercises = JSON.parse(cachedExercises);
+            setExercises(parsedExercises);
+            setData(prevData => ({
+                ...prevData,
+                typeOfExercises: parsedExercises,
+            }));
+        }
+    }, [setData]);
 
     const handleAddExercise = (e: React.FormEvent) => {
         e.preventDefault();
         if (newExercise.trim() === "") return;
 
+        const updatedExercises = [...exercises, newExercise.trim()];
+        setExercises(updatedExercises);
         setData((prevData) => ({
             ...prevData,
-            typeOfExercises: [...prevData.typeOfExercises, newExercise.trim()],
+            typeOfExercises: updatedExercises,
         }));
+        localStorage.setItem('exercises', JSON.stringify(updatedExercises));
 
         setNewExercise("");
     };
 
     const handleDeleteExercise = (id: string) => {
+        const updatedExercises = exercises.filter((exercise) => exercise !== id);
+        setExercises(updatedExercises);
         setData((prevData) => ({
             ...prevData,
-            typeOfExercises: prevData.typeOfExercises.filter((exercise) => exercise !== id),
+            typeOfExercises: updatedExercises,
         }));
+        localStorage.setItem('exercises', JSON.stringify(updatedExercises));
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (active && over && active.id !== over.id) {
-            setData((prevData) => {
-                const oldIndex = prevData.typeOfExercises.indexOf(active.id as string);
-                const newIndex = prevData.typeOfExercises.indexOf(over.id as string);
+            const oldIndex = exercises.indexOf(active.id as string);
+            const newIndex = exercises.indexOf(over.id as string);
 
-                return {
-                    ...prevData,
-                    typeOfExercises: arrayMove(prevData.typeOfExercises, oldIndex, newIndex),
-                };
-            });
+            const updatedExercises = arrayMove(exercises, oldIndex, newIndex);
+            setExercises(updatedExercises);
+            setData((prevData) => ({
+                ...prevData,
+                typeOfExercises: updatedExercises,
+            }));
+            localStorage.setItem('exercises', JSON.stringify(updatedExercises));
         }
     };
 
@@ -91,11 +110,10 @@ const ExercisesDND: React.FC<ExercisesDNDProps> = ({ typeOfExercises, setData })
             </form>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={typeOfExercises} strategy={verticalListSortingStrategy}>
-                    {typeOfExercises.map((exercise) => (
+                <SortableContext items={exercises} strategy={verticalListSortingStrategy}>
+                    {exercises.map((exercise) => (
                         <SortableItem key={exercise} id={exercise} onDelete={handleDeleteExercise}>
                             {exercise}
-                            
                         </SortableItem>
                     ))}
                 </SortableContext>
@@ -105,3 +123,4 @@ const ExercisesDND: React.FC<ExercisesDNDProps> = ({ typeOfExercises, setData })
 };
 
 export default ExercisesDND;
+

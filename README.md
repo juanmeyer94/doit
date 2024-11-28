@@ -22,26 +22,26 @@ DO-IT es una herramienta diseñada para entrenamientos funcionales, CrossFit y c
 
 ---
 
-## 🚀 Cómo Ejecutar el Proyecto  
+## 🚀 Cómo Ejecutar el Proyecto
 
 ### 1. Clona el repositorio  
-```bash
+
 git clone https://github.com/tu-usuario/DO-IT.git  
 cd DO-IT  
 
+
 ### 2. Usando PNPM  
-```bash
-pnpm install
 
-### 2. Ejecuta el proyecto en desarrollo
-```bash
-pnpm run dev
-Accede a la aplicación en http://localhost:3000
+pnpm install  
 
-### 2. Ejecuta el proyecto en desarrollo
-```bash
-pnpm run dev
-Accede a la aplicación en http://localhost:3000
+
+### 3. Ejecuta el proyecto en desarrollo  
+
+pnpm run dev  
+
+
+Accede a la aplicación en [http://localhost:3000](http://localhost:3000).
+
 
 ## 🌟 Reflexión
 - **Este proyecto me permitió explorar**:

@@ -3,7 +3,6 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CircularTimer from '../timer/circularTimer';
 
-// Mock data
 const mockData = {
   sessions: 3,
   exerciseTime: 45,
@@ -15,19 +14,29 @@ const mockData = {
 };
 
 describe('CircularTimer', () => {
+  const originalLocation = window.location;
+
+  beforeAll(() => {
+    delete (window as any).location;
+    window.location = { ...originalLocation, reload: jest.fn() };
+  });
+
+  afterAll(() => {
+    window.location = originalLocation;
+  });
+
   beforeEach(() => {
     jest.useFakeTimers();
   });
 
   afterEach(() => {
     jest.clearAllTimers();
-    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   const advanceTimeAndUpdate = async (time: number) => {
     await act(async () => {
       jest.advanceTimersByTime(time);
-      await Promise.resolve();
     });
   };
 
@@ -69,18 +78,15 @@ describe('CircularTimer', () => {
     expect(screen.queryByText('EN PAUSA')).not.toBeInTheDocument();
   });
 
-  it('resets the timer when reset button is clicked', async () => {
+  it('calls window.location.reload when reset button is clicked', () => {
     render(<CircularTimer data={mockData} />);
+    
     fireEvent.click(screen.getByText('Iniciar'));
-    await advanceTimeAndUpdate(10000);
-
+    jest.advanceTimersByTime(5000);
     fireEvent.click(screen.getByText('Reiniciar'));
-    expect(screen.getByText('Sesión: 1 / 3')).toBeInTheDocument();
-    expect(screen.getByText('Ejercicio: 1 / 2')).toBeInTheDocument();
-    expect(screen.queryByText('0:35')).not.toBeInTheDocument();
+    expect(window.location.reload).toHaveBeenCalledTimes(1);
   });
 
-  
   it('changes color based on phase', async () => {
     render(<CircularTimer data={mockData} />);
     fireEvent.click(screen.getByText('Iniciar'));
